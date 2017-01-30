@@ -1,0 +1,43 @@
+#!/bin/bash
+# user color in awk example :  "\033[1;31m" $4 "\033[0m "
+
+TIME_AND_DATE=$(date | awk ' {print "Time: "$4 "\n" "Date: " $3" "$2" "$6 }')
+USERID=$(whoami)
+DISKSTATS=$(lsblk -lo name,mountpoint,size)
+DISKUSAGE=($(df -H | grep -vE '^Filesystem|tmpfs|cdrom|udev' | awk '{ print $5""$1 }' ))
+INTNAME=($(ip a | grep BROADCAST | grep UP | awk '{print $2}'))
+
+echo "$TIME_AND_DATE"
+echo "UserName: $USERID"
+echo -e 
+echo -e " Filesystem      Size  Used Avail Use% Mounted on"
+  for i in "${DISKUSAGE[@]}"
+  do
+    ITEM=$(echo $i | sed "s/\%/ /g" | awk '{print $1} ')
+       if [ $ITEM -gt 75 ]
+       then
+        ITEMPATH=$(echo $i | sed "s/\// /g" | awk '{print $3}')
+        PYPATH=$(df -H | grep $ITEMPATH)
+        echo -e "\033[1;31m" "$PYPATH" "\033[0m "
+       else
+        ITEMPATH=$(echo $i | sed "s/\// /g" | awk '{print $3}')
+        PYPATH=$(df -H | grep $ITEMPATH)
+        echo -e " $PYPATH"
+       fi
+  done
+echo -e 
+echo -e "Local IP Address(es)"
+  for i in "${INTNAME[@]}"; do
+    LOCALIP=$(ip addr show dev $i | grep -w inet | awk '{print $2}' | awk -F "/" '{print $1}')
+    echo -e $i $LOCALIP 
+  done
+echo -e ""
+  if  ping -c 1 google.com &> /dev/null  
+  then 
+    echo -e "We are Connected to the INTERNET" 
+    echo -e "Public IP Address"
+    echo -e $(curl --silent ipinfo.io/ip)
+  else
+    echo -e "\033[1;31m" "we are NOT connected to the INTERNET" "\033[0m " 
+  fi
+echo -e  
