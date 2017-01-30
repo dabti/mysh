@@ -1,13 +1,15 @@
 #!/bin/bash
 # user color in awk example :  "\033[1;31m" $4 "\033[0m "
 
-TIME_AND_DATE=$(date | awk ' {print "Time: "$4 "\n" "Date: " $3" "$2" "$6 }')
+TIME=$(awk 'BEGIN {print strftime("Time: %H:%M %p")}')
+DATE=$(awk 'BEGIN {print strftime("Date: %A - %d %B %Y")}')
 USERID=$(whoami)
 DISKSTATS=$(lsblk -lo name,mountpoint,size)
 DISKUSAGE=($(df -H | grep -vE '^Filesystem|tmpfs|cdrom|udev' | awk '{ print $5""$1 }' ))
 INTNAME=($(ip a | grep BROADCAST | grep UP | awk '{print $2}'))
 
-echo "$TIME_AND_DATE"
+echo "$TIME"
+echo "$DATE"
 echo "UserName: $USERID"
 echo -e 
 echo -e " Filesystem      Size  Used Avail Use% Mounted on"
