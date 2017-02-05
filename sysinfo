@@ -7,7 +7,14 @@ USERID=$(whoami)
 DISKSTATS=$(lsblk -lo name,mountpoint,size)
 DISKUSAGE=($(df -H | grep -vE '^Filesystem|tmpfs|cdrom|udev' | awk '{ print $5""$1 }' ))
 INTNAME=($(ip a | grep BROADCAST | grep UP | awk '{print $2}'))
+MEMUSAGE=$(free -g | awk '
+NR==2{ $6 = ((100*$3)/$2); 
+if($6>=75) 
+  print "\033[0;31m"" "$2"G""             "$3"G""    "$4"G""   "int($6)"%""\033[0m" ;
+else 
+  print " "$2"G""             "$3"G""    "$4"G""   "int($6)"%"}')
 
+echo -e ""
 echo "$TIME"
 echo "$DATE"
 echo "UserName: $USERID"
@@ -16,7 +23,7 @@ echo -e " Filesystem      Size  Used Avail Use% Mounted on"
   for i in "${DISKUSAGE[@]}"
   do
     ITEM=$(echo $i | sed "s/\%/ /g" | awk '{print $1} ')
-       if [ $ITEM -gt 75 ]
+       if [ $ITEM -gt 75 ] 
        then
         ITEMPATH=$(echo $i | sed "s/\// /g" | awk '{print $3}')
         PYPATH=$(df -H | grep $ITEMPATH)
@@ -28,12 +35,15 @@ echo -e " Filesystem      Size  Used Avail Use% Mounted on"
        fi
   done
 echo -e 
+echo -e " TotalMem        Used  Free  Use%  "
+echo -e "$MEMUSAGE"
+echo -e 
 echo -e "Local IP Address(es)"
   for i in "${INTNAME[@]}"; do
     LOCALIP=$(ip addr show dev $i | grep -w inet | awk '{print $2}' | awk -F "/" '{print $1}')
     echo -e $i $LOCALIP 
   done
-echo -e ""
+echo -e 
   if  ping -c 1 google.com &> /dev/null  
   then 
     echo -e "We are Connected to the INTERNET" 
@@ -43,3 +53,5 @@ echo -e ""
     echo -e "\033[1;31m" "we are NOT connected to the INTERNET" "\033[0m " 
   fi
 echo -e  
+
+
